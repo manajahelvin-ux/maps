@@ -571,6 +571,30 @@ var UBE_CONFIG = {
     }
     data.autre_info_fj = recap.join('\n');
 
+    /* ---- Module géolocalisation entreprise (cp-geo) ----
+       Fusion des données des blocs A (localisation) et B (bâtiment) au
+       lead courant : objet structuré `geo_entreprise_module` + champs
+       plats `geo_*` (compatibles champs CRM individuels / Sheets).
+       Aucun champ existant n'est modifié. Si le module est absent ou en
+       erreur, le lead part inchangé (dégradation gracieuse). */
+    try {
+      if (window.cpGeo && typeof window.cpGeo.getLeadPayload === 'function') {
+        var geoPayload = window.cpGeo.getLeadPayload();
+        if (geoPayload && geoPayload.structured) {
+          data.geo_entreprise_module = geoPayload.structured;
+          Object.keys(geoPayload.flat || {}).forEach(function (key) {
+            data[key] = key === 'geo_entreprise'
+              ? clean(geoPayload.flat[key], 8000)
+              : clean(geoPayload.flat[key], 500);
+          });
+          debugLog('Données géo fusionnées au lead.', {
+            localisation: geoPayload.structured.company_location.status,
+            batiment: geoPayload.structured.company_building.status
+          });
+        }
+      }
+    } catch (e) { debugLog('Module géo indisponible à la soumission.', e); }
+
     if (trackingGranted()) {
       ['user', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_id',
         'utm_category', 'utm_user', 'ltm_source', 'ltm_category', 'ltm_typ', 'ltm_user'].forEach(function (key) {
@@ -666,6 +690,23 @@ var UBE_CONFIG = {
       'ltm_user', 'gclid', 'msclkid', 'fbclid', 'page_url', 'page_referrer',
       'user_agent', 'langue'].forEach(function (key) {
       if (data[key]) sheetData[key] = data[key];
+    });
+    /* Module géo (cp-geo) : champs plats transmis à Google Sheets. Les
+       colonnes absentes du script Apps Script sont ignorées sans erreur ;
+       pour les conserver, ajouter ces colonnes côté Apps Script (voir
+       GEO-MODULE.md). */
+    ['geo_entreprise', 'geo_recherche_id', 'geo_statut_localisation', 'geo_adresse',
+      'geo_code_postal', 'geo_ville', 'geo_pays', 'geo_latitude', 'geo_longitude',
+      'geo_carte_url', 'geo_carte_image_url', 'geo_carte_source', 'geo_geocodage_source',
+      'geo_localisation_validee', 'geo_localisation_validee_le', 'geo_statut_batiment',
+      'geo_batiment_adresse', 'geo_batiment_code_postal', 'geo_batiment_ville',
+      'geo_batiment_pays', 'geo_batiment_latitude', 'geo_batiment_longitude',
+      'geo_batiment_image_url', 'geo_batiment_image_source', 'geo_batiment_image_type',
+      'geo_batiment_image_licence', 'geo_batiment_image_auteur', 'geo_batiment_image_page',
+      'geo_batiment_image_distance_m', 'geo_batiment_vue_aerienne_url',
+      'geo_batiment_vue_aerienne_source', 'geo_batiment_valide', 'geo_batiment_valide_le',
+      'geo_batiment_sans_image_motif'].forEach(function (key) {
+      if (data[key]) sheetData[key] = clean(data[key], key === 'geo_entreprise' ? 8000 : 500);
     });
     return sheetData;
   }
@@ -891,6 +932,9 @@ var UBE_CONFIG = {
   /* ---- API de controle QA ---- */
   window.lpLead = Object.freeze({
     version: VERSION,
+    /* Identifiant unique du lead en cours : partagé avec le module géo
+       (cp-geo) pour associer localisation/bâtiment au même lead. */
+    getLeadId: function () { return submissionId; },
     config: {
       leadApiUrl: CONFIG.leadApiUrl,
       leadApiMode: CONFIG.leadApiMode,

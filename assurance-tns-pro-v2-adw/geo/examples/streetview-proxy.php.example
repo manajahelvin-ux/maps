@@ -1,0 +1,113 @@
+<?php
+/**
+ * =====================================================================
+ *  Proxy serveur FACULTATIF — Google Street View pour le module cp-geo
+ *  (landing page assurance-tns-pro-v2-adw)
+ * ---------------------------------------------------------------------
+ *  POURQUOI : la clé API Google Maps doit rester côté serveur
+ *  (RGPD/sécurité — jamais de clé privée dans le JavaScript public).
+ *
+ *  DÉPLOIEMENT :
+ *   1. copier ce fichier sur un hébergement PHP (idéalement le même
+ *      domaine que la LP, ex. /geo/streetview-proxy.php) ;
+ *   2. définir la clé API (variable d'environnement recommandée) :
+ *        SetEnv CP_GEO_GMAPS_KEY "votre-clé-Maps-Static/Street-View"
+ *      — la clé doit avoir « Street View Static API » activée et un
+ *      référent HTTP restreint à votre domaine ;
+ *   3. côté LP, activer le fournisseur :
+ *        window.CP_GEO_CONFIG = { images: {
+ *          streetViewProxy: '/geo/streetview-proxy.php'
+ *        }};
+ *      (script placé AVANT geo/cp-geo-core.js)
+ *
+ *  CONTRAT de réponse attendu par cp-geo-images.js :
+ *   - image trouvée  : {"status":"OK","image_url":"https://…",
+ *                       "lat":48.8566,"lon":2.3522,"heading":123,
+ *                       "date":"2024-06"}
+ *   - rien de fiable : {"status":"ZERO_RESULTS"}
+ *   - erreur         : {"status":"ERROR","message":"…"} (HTTP 502)
+ *
+ *  Le module n'affiche l'image que si son hôte figure sur sa liste
+ *  blanche (maps.googleapis.com, streetviewpixels-pa.googleapis.com…).
+ *
+ *  OPTION « stockage durable » : pour héberger vous-même les photos
+ *  validées (exigence CRM éventuelle), ajouter ici un mode
+ *  ?action=store&url=… qui valide l'hôte, télécharge le fichier,
+ *  le stocke (ex. /media/geo/<lead_id>.jpg) et renvoie l'URL interne.
+ * =====================================================================
+ */
+
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+
+/* CORS : autoriser uniquement le domaine de la landing page */
+$allowedOrigins = [
+    'https://assurance-tns-pro-v2-adw.lp.comparateurpro.fr',
+];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Vary: Origin');
+} else {
+    http_response_code(403);
+    echo json_encode(['status' => 'ERROR', 'message' => 'Origine non autorisée']);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    http_response_code(405);
+    echo json_encode(['status' => 'ERROR', 'message' => 'Méthode non autorisée']);
+    exit;
+}
+
+$apiKey = getenv('CP_GEO_GMAPS_KEY') ?: '';
+if ($apiKey === '') {
+    http_response_code(500);
+    echo json_encode(['status' => 'ERROR', 'message' => 'Clé API non configurée côté serveur']);
+    exit;
+}
+
+$lat = filter_var($_GET['lat'] ?? '', FILTER_VALIDATE_FLOAT);
+$lon = filter_var($_GET['lon'] ?? '', FILTER_VALIDATE_FLOAT);
+$radius = min(100, max(10, (int)($_GET['radius'] ?? 60)));
+
+if ($lat === false || $lon === false || abs($lat) > 90 || abs($lon) > 180) {
+    http_response_code(422);
+    echo json_encode(['status' => 'ERROR', 'message' => 'Coordonnées invalides']);
+    exit;
+}
+
+/* 1) Métadonnées Street View : existe-t-il une photo à proximité ? */
+$metaUrl = 'https://maps.googleapis.com/maps/api/streetview/metadata?' . http_build_query([
+    'location' => $lat . ',' . $lon,
+    'radius'   => $radius,
+    'source'   => 'outdoor',   /* extérieur uniquement — règle métier du module */
+    'key'      => $apiKey,
+]);
+
+$meta = json_decode(@file_get_contents($metaUrl), true);
+if (!$meta || ($meta['status'] ?? '') !== 'OK') {
+    /* ZERO_RESULTS = aucune photo fiable : le module affichera son message
+       explicite et proposera la vue aérienne en repli. */
+    echo json_encode(['status' => $meta['status'] ?? 'ERROR']);
+    exit;
+}
+
+/* 2) URL de l'image (signée par Google via la clé — côté serveur) */
+$imageUrl = 'https://maps.googleapis.com/maps/api/streetview?' . http_build_query([
+    'size'   => '800x600',
+    'location' => $lat . ',' . $lon,
+    'radius' => $radius,
+    'heading' => $meta['heading'] ?? 0,
+    'source' => 'outdoor',
+    'key'    => $apiKey,
+]);
+
+echo json_encode([
+    'status'    => 'OK',
+    'image_url' => $imageUrl,
+    'lat'       => $meta['location']['lat'] ?? $lat,
+    'lon'       => $meta['location']['lng'] ?? $lon,
+    'heading'   => $meta['heading'] ?? null,
+    'date'      => $meta['date'] ?? null,
+]);

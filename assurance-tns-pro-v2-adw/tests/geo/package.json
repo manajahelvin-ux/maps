@@ -1,0 +1,14 @@
+{
+  "name": "cp-geo-module-tests",
+  "version": "1.0.0",
+  "description": "Tests du module de géolocalisation cp-geo (assurance-tns-pro-v2-adw)",
+  "scripts": {
+    "test": "node --test --test-force-exit test-*.mjs"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "jsdom": "^30.1.3"
+  },
+  "private": true,
+  "type": "module"
+}
