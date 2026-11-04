@@ -323,3 +323,139 @@ test('anti-doublon : la même recherche ne repasse pas par le réseau', async ()
   assert.equal(callsAfterSecond, callsAfterFirst, 'résultats servis depuis le cache de session');
   dom.window.close();
 });
+
+/* ------- Régression bloc B : conservation / écrasement de la sélection ------- */
+
+const PARIS_BUILDING = {
+  address: '12 Rue de la Paix 75002 Paris', postal_code: '75002', city: 'Paris',
+  country: 'France', country_code: 'FR', latitude: 48.8566, longitude: 2.3522,
+  building_image_url: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Immeuble_12_rue_de_la_Paix_Paris.jpg',
+  building_image_thumb_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Immeuble_12_rue_de_la_Paix_Paris.jpg/720px-Immeuble_12_rue_de_la_Paix_Paris.jpg',
+  image_source: 'Wikimedia Commons', image_type: 'photo_exterieure',
+  image_license: 'CC BY-SA 4.0', image_author: 'Jean Dupont',
+  image_page_url: 'https://commons.wikimedia.org/wiki/File:Immeuble_12_rue_de_la_Paix_Paris.jpg',
+  image_distance_m: 12, status: 'pending'
+};
+
+test('bloc B : nouvelle recherche à la même adresse conserve la sélection validée', async () => {
+  const dom = env();
+  await tick(30);
+  const win = dom.window;
+  win.CPGeo.setLocation({
+    address: '12 Rue de la Paix 75002 Paris', house_number: '12', street: 'Rue de la Paix',
+    postal_code: '75002', city: 'Paris', country: 'France', country_code: 'FR',
+    latitude: 48.8566, longitude: 2.3522, status: 'found'
+  });
+  win.CPGeo.validateLocation();
+
+  /* première recherche : photo Commons sélectionnée puis validée */
+  win.CPGeo.ui._openBuildingModal(null);
+  let overlay = q(win, '.cpgeo-modal-overlay.cpgeo-open');
+  buttonByText(overlay, 'Lancer la recherche').click();
+  await tick(150);
+  qa(overlay, '.cpgeo-photo-card')[0].click();
+  await tick(10);
+  buttonByText(overlay, 'Utiliser cette image').click();
+  await tick(20);
+  qa(win, '.cpgeo-block')[1].querySelector('.cpgeo-btn-primary').click();
+  await tick(10);
+  assert.equal(win.cpGeo.getBuilding().validated, true, 'bâtiment validé');
+  const photoUrl = win.cpGeo.getBuilding().building_image_url;
+  assert.match(photoUrl, /upload\.wikimedia\.org/);
+
+  /* seconde recherche avec les mêmes champs : point résolu identique */
+  win.CPGeo.ui._openBuildingModal(null);
+  overlay = q(win, '.cpgeo-modal-overlay.cpgeo-open');
+  assert.equal(overlay.querySelector('input[name="cpgeo_street"]').value, '12 Rue de la Paix');
+  buttonByText(overlay, 'Lancer la recherche').click();
+  await tick(150);
+
+  const b = win.cpGeo.getBuilding();
+  assert.equal(b.validated, true, 'la validation précédente est conservée');
+  assert.equal(b.status, 'validated');
+  assert.equal(b.building_image_url, photoUrl, 'la photo choisie est conservée');
+  assert.match(qa(win, '.cpgeo-badge')[1].textContent, /Bâtiment validé le/);
+  assert.ok(q(win, '.cpgeo-photo-caption'), 'la légende de la photo reste affichée dans le bloc');
+  assert.ok(qa(overlay, '.cpgeo-photo-card').length >= 2, 'la galerie reste proposée pour un autre choix');
+  dom.window.close();
+});
+
+test('bloc B : recherche à une autre adresse efface la photo précédente', async () => {
+  const BAN_LYON = {
+    type: 'FeatureCollection',
+    features: [{
+      geometry: { coordinates: [4.8357, 45.7640] },
+      properties: {
+        label: '1 Rue de la République 69002 Lyon', score: 0.97,
+        housenumber: '1', street: 'Rue de la République',
+        postcode: '69002', city: 'Lyon', context: '69, Rhône, Auvergne-Rhône-Alpes', type: 'housenumber'
+      }
+    }]
+  };
+  const dom = env({
+    'api-adresse.data.gouv.fr/search': (url) => (url.searchParams.get('postcode') === '69002'
+      ? { ok: true, status: 200, json: () => Promise.resolve(BAN_LYON) }
+      : { ok: true, status: 200, json: () => Promise.resolve(BAN_FIXTURE) })
+  });
+  await tick(30);
+  const win = dom.window;
+
+  /* sélection précédente validée à Paris */
+  win.CPGeo.setBuilding(Object.assign({}, PARIS_BUILDING));
+  win.CPGeo.validateBuilding();
+  assert.equal(win.cpGeo.getBuilding().validated, true);
+
+  /* nouvelle recherche à Lyon */
+  win.CPGeo.ui._openBuildingModal(null);
+  const overlay = q(win, '.cpgeo-modal-overlay.cpgeo-open');
+  overlay.querySelector('input[name="cpgeo_street"]').value = '1 rue de la République';
+  overlay.querySelector('input[name="cpgeo_postal"]').value = '69002';
+  overlay.querySelector('input[name="cpgeo_city"]').value = 'Lyon';
+  buttonByText(overlay, 'Lancer la recherche').click();
+  await tick(180);
+
+  const b = win.cpGeo.getBuilding();
+  assert.equal(b.latitude, 45.764);
+  assert.equal(b.longitude, 4.8357);
+  assert.equal(b.address, '1 Rue de la République 69002 Lyon');
+  assert.equal(b.postal_code, '69002');
+  assert.equal(b.city, 'Lyon');
+  assert.equal(b.status, 'found');
+  assert.equal(b.validated, false, 'nouvelle adresse : la validation est remise à zéro');
+  assert.equal(b.building_image_url, '', 'la photo parisienne ne correspond plus : effacée');
+  assert.equal(b.image_source, '');
+  assert.equal(b.image_license, '');
+  assert.equal(q(win, '.cpgeo-photo-caption'), null, 'plus de légende dans le bloc');
+  assert.match(qa(win, '.cpgeo-badge')[1].textContent, /Résultat trouvé/);
+  assert.ok(qa(overlay, '.cpgeo-photo-card').length >= 2, 'une nouvelle galerie est proposée');
+  dom.window.close();
+});
+
+test('bloc B : aucune nouvelle photo à la même adresse, sélection précédente conservée', async () => {
+  const dom = env({ 'commons.wikimedia.org': () => ({ ok: true, status: 200, json: () => Promise.resolve(COMMONS_EMPTY_FIXTURE) }) });
+  await tick(30);
+  const win = dom.window;
+  win.CPGeo.setBuilding(Object.assign({}, PARIS_BUILDING));
+  win.CPGeo.validateBuilding();
+
+  win.CPGeo.ui._openBuildingModal(null);
+  const overlay = q(win, '.cpgeo-modal-overlay.cpgeo-open');
+  overlay.querySelector('input[name="cpgeo_street"]').value = '12 rue de la Paix';
+  overlay.querySelector('input[name="cpgeo_postal"]').value = '75002';
+  overlay.querySelector('input[name="cpgeo_city"]').value = 'Paris';
+  buttonByText(overlay, 'Lancer la recherche').click();
+  await tick(150);
+
+  assert.ok(q(overlay, '.cpgeo-no-image'), 'message explicite affiché');
+  assert.match(overlay.textContent, /sélection précédente est conservée/);
+  const b = win.cpGeo.getBuilding();
+  assert.equal(b.validated, true, 'la validation est conservée (même adresse)');
+  assert.equal(b.status, 'validated');
+  assert.match(b.building_image_url, /upload\.wikimedia\.org/, 'photo précédente intacte');
+  assert.match(b.no_image_reason, /sélection précédente/);
+  assert.match(qa(win, '.cpgeo-badge')[1].textContent, /Bâtiment validé le/);
+  const cards = qa(overlay, '.cpgeo-photo-card');
+  assert.equal(cards.length, 1, 'seul le repli vue aérienne est proposé');
+  assert.match(cards[0].textContent, /Vue satellite/);
+  dom.window.close();
+});

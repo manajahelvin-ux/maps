@@ -956,9 +956,10 @@
           photos: found.photos.length, providers: (found.providers_used || []).join(','),
           errors: found.errors.length
         });
+        /* Le statut du bloc B est calculé au sein de renderBuildingResults :
+           conservation de la sélection/validation précédente si le point
+           résolu est identique, remise à zéro si l'adresse a changé. */
         renderBuildingResults(found);
-        CPGeo.setBuilding({ status: selectedItem ? STATUS.PENDING : (found.photos.length ? STATUS.FOUND : STATUS.IMAGE_UNAVAILABLE) }, { silent: true });
-        renderBuildingBlock();
       }).catch(function (error) {
         modal.setBusy(false);
         var msg = error && error.message ? error.message : 'Erreur pendant la recherche du bâtiment.';

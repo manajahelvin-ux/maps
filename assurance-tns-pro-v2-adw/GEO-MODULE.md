@@ -2,7 +2,7 @@
 
 **Projet :** ComparateurPro — landing page `assurance-tns-pro-v2-adw`
 **Version du module :** 1.0.0 — 2026-11-04
-**Statut :** opérationnel, intégré au formulaire de collecte de leads, testé (60 tests automatisés — voir §9)
+**Statut :** opérationnel, intégré au formulaire de collecte de leads, testé (63 tests automatisés — voir §9)
 
 ---
 
@@ -314,7 +314,7 @@ reconstruit le payload complet (état conservé en mémoire + sessionStorage).
 
 ## 9. Tests
 
-### 9.1 Suite automatisée (60 tests, tous verts au 2026-11-04)
+### 9.1 Suite automatisée (63 tests, tous verts au 2026-11-04)
 ```bash
 cd assurance-tns-pro-v2-adw/tests/geo
 npm ci        # jsdom uniquement (dev)
@@ -330,7 +330,7 @@ BAN / Nominatim / Wikimedia Commons.
 | `test-geocoding.mjs` | BAN prioritaire en France (paramètres `q`/`postcode`), complément Nominatim, repli si BAN HS, **Belgique via Nominatim `countrycodes=be`**, recherche par nom d'entreprise (POI OSM), recherche vide, erreur réseau explicite, **throttle ≤ 1 req/s**, géocodage inverse FR (BAN) et Europe (Nominatim) avec préservation du point exact, normalisation WGS84 | 11 |
 | `test-images.mjs` | Calcul de tuiles Web Mercator (valeurs de référence vérifiées par 2 formules indépendantes), filtrage Commons (titres non pertinents type « Carte… », images minuscules, **hôtes hors liste blanche rejetés**), tri par distance, licence/auteur/page extraits du HTML, repli vue aérienne si 0 photo, isolation des erreurs fournisseurs, proxy Street View désactivé par défaut | 8 |
 | `test-lead-integration.mjs` | Fusion au payload HelloLead (`geo_entreprise_module` + `geo_*`), **même identifiant de lead**, champs Google Sheets, **tous les champs CRM existants strictement identiques avec/sans module**, `ltm_source/ltm_category/ltm_typ` préservés, filtrage sans consentement cookies, dégradation gracieuse sans le module | 8 |
-| `test-ui-flow.mjs` | Parcours complets en DOM réel : montage, préremplissage depuis société/code postal, modale → recherche BAN → sélection → « Utiliser » → **Valider** (badge + message), adresse introuvable, erreur réseau, **aucune photo → message explicite + vue aérienne sélectionnable**, photo Commons avec distance/licence/auteur/avertissement > 60 m, rechargement de page, modification d'une localisation validée sans perdre la photo du bâtiment, accessibilité modale (dialog, ESC, focus), anti-doublon de recherche (cache) | 10 |
+| `test-ui-flow.mjs` | Parcours complets en DOM réel : montage, préremplissage depuis société/code postal, modale → recherche BAN → sélection → « Utiliser » → **Valider** (badge + message), adresse introuvable, erreur réseau, **aucune photo → message explicite + vue aérienne sélectionnable**, photo Commons avec distance/licence/auteur/avertissement > 60 m, rechargement de page, modification d'une localisation validée sans perdre la photo du bâtiment, accessibilité modale (dialog, ESC, focus), anti-doublon de recherche (cache), **régressions bloc B : nouvelle recherche à la même adresse → sélection/validation conservées ; recherche à une autre adresse → ancienne photo effacée ; aucune nouvelle photo au même point → repli sans écraser la sélection** | 13 |
 
 ### 9.2 Correspondance avec les 21 tests fonctionnels exigés
 
