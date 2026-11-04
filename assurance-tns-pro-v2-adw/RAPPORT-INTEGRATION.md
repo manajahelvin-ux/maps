@@ -2,6 +2,10 @@
 
 Le formulaire et le design de la page sont conservés. Le wrapper de capture n'utilise plus le handler Webflow de soumission ; l'ancien SMS concurrent et la simulation locale des appels ont été retirés de ce dossier. `lead-handler.js` et `verification-sms.js` assurent la capture et la vérification SMS. Le conteneur GTM `GTM-53SH7D7F` est rétabli après le Consent Mode par défaut.
 
+## Module géolocalisation entreprise (cp-geo) — ajouté le 2026-11-04
+
+Nouvelle étape facultative « Localisation et identification de votre entreprise » dans le formulaire (bloc A : carte + GPS validables ; bloc B : photographie du bâtiment + vue aérienne validables), insérée entre « société + code postal » et « société existante ? » via le mécanisme Formly `data-card="true"`. Fichiers dans `geo/` (Leaflet 1.9.4 vendorisé) ; données fusionnées au lead dans `lead-handler.js` (objet `geo_entreprise_module` + champs plats `geo_*` pour CRM/Sheets) ; tracking, conversions, vérification SMS et parcours existants inchangés. Documentation complète, structure JSON, integration CRM, rapport de tests (63 tests automatisés : `npm ci && npm test` dans `tests/geo/`) et limites : voir **`GEO-MODULE.md`**. Avant mise en ligne : enregistrer les champs `geo_*` côté HelloLead/Sheets et exécuter la checklist de recette manuelle (§9.3 de GEO-MODULE.md).
+
 - Identité CRM : `ADW_LP_ASSURANCE_TNS_PRO` (à valider/enregistrer côté CRM).
 - Source de secours : `LP TNS PRO`.
 - CRM : URL et mode dans `lead-handler.js` (`UBE_CONFIG`, surcharge possible par `window.UBE_CONFIG_OVERRIDE`). Le mode par défaut `nocors` ne confirme pas la réception.

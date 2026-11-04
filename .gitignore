@@ -1,0 +1,6 @@
+# Dépendances de test (jamais versionnées)
+node_modules/
+
+# Artefacts divers
+*.log
+.DS_Store

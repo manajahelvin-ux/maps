@@ -11,6 +11,8 @@
   <meta content="Webflow" name="generator">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="fonts-global.css">
+  <!-- Module géolocalisation entreprise (cp-geo) : styles isolés, préfixés .cpgeo- -->
+  <link rel="stylesheet" href="geo/cp-geo.css">
   
   
   
@@ -142,9 +144,27 @@
               </div>
             </div>
             <div data-form="step" class="etape-2 form-blobale">
-              <div data-go-to="societe" data-answer="code-postal" class="etape-content form-blobale">
+              <div data-go-to="geo-entreprise" data-answer="code-postal" class="etape-content form-blobale">
                 <div class="titre-assurance-iard">Quelle est la société concernée par cette demande ?</div>
                 <div class="coordonnees-societe"><input class="nom-societe w-input" maxlength="256" name="societe" data-name="societe" placeholder="Nom de la société" type="text" required=""><input class="code-postale-webflow w-input" data-phone-autoformat="xxxxx" maxlength="256" data-min-character="5" name="code_postal" data-name="code_postal" placeholder="Code postal" type="tel" required=""></div>
+                <div class="etape-bouton assurance-iard">
+                  <a data-form="back-btn" href="#" class="bouton-precedent rc-pro w-button">Précédent</a>
+                  <a data-form="next-btn" href="#" class="bouton-suivant rc-pro w-button">Suivant</a>
+                </div>
+              </div>
+            </div>
+            <!-- ============ Module cp-geo : Localisation et identification de
+                 votre entreprise. Étape SANS champ obligatoire (parcours non
+                 bloquant) ; data-card="true" = mécanisme Formly officiel pour
+                 les étapes sans input (navigation Suivant/Précédent assurée).
+                 Les deux blocs (localisation / bâtiment) sont indépendants et
+                 construits par geo/cp-geo-ui.js dans #cpgeo-root. ============ -->
+            <div data-form="step" data-card="true" class="etape-2 form-blobale cpgeo-step">
+              <div data-answer="geo-entreprise" data-go-to="societe" class="etape-content form-blobale">
+                <div class="titre-assurance-iard">Localisation et identification de votre entreprise</div>
+                <p class="cpgeo-intro">Vérifiez en quelques secondes la position de votre entreprise sur la carte et, si elle existe, la photographie réelle de son bâtiment. Ces informations aident nos partenaires assureurs à mieux identifier votre activité. <strong>Cette étape est facultative</strong> : vous pouvez passer directement à la suite avec « Suivant ».</p>
+                <div id="cpgeo-root" class="cpgeo-root"><noscript><p class="cpgeo-empty-note">Le module de localisation nécessite JavaScript. Vous pouvez continuer le formulaire sans lui.</p></noscript></div>
+                <p class="cpgeo-rgpd">Finalité de cette collecte : associer l’adresse et les coordonnées géographiques de votre entreprise à votre demande de devis, transmises avec celle-ci à nos partenaires assureurs. Données hébergées dans l’Union européenne, conservation et droits d’accès/rectification : voir notre <a href="../politique-de-confidentialite-donnees-personnelles/" target="_blank" rel="noopener noreferrer">politique de confidentialité</a>. Cartes et images : OpenStreetMap, Base Adresse Nationale (api.gouv.fr), Wikimedia Commons, Esri World Imagery — avec attribution.</p>
                 <div class="etape-bouton assurance-iard">
                   <a data-form="back-btn" href="#" class="bouton-precedent rc-pro w-button">Précédent</a>
                   <a data-form="next-btn" href="#" class="bouton-suivant rc-pro w-button">Suivant</a>
@@ -324,5 +344,14 @@
 <script src="script.js?v=3" defer></script>
 <script src="lead-handler.js" defer></script>
 <script src="verification-sms.js" defer></script>
+<!-- Module géolocalisation entreprise (cp-geo) — chargé après le formulaire ;
+     son absence ne bloque ni le formulaire ni la soumission (dégradation
+     gracieuse côté lead-handler.js). Leaflet est chargé à la demande par
+     cp-geo-ui.js (fichiers locaux geo/leaflet/), jamais au démarrage. -->
+<script src="geo/cp-geo-core.js?v=1" defer></script>
+<script src="geo/cp-geo-geocoding.js?v=1" defer></script>
+<script src="geo/cp-geo-images.js?v=1" defer></script>
+<script src="geo/cp-geo-ui.js?v=1" defer></script>
+<script src="geo/cp-geo-init.js?v=1" defer></script>
 </body>
 </html>

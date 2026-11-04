@@ -1,0 +1,548 @@
+/* =====================================================================
+   cp-geo.css — Module "Localisation et identification de l'entreprise"
+   Landing page ComparateurPro — assurance-tns-pro-v2-adw
+   ---------------------------------------------------------------------
+   Identité visuelle existante respectée :
+   - bleu primaire  #0072cc (boutons rc-pro),
+   - texte          #323232, titres Roboto/Poppins,
+   - cartes blanches, inputs type .w-input (38px, bord #cccccc).
+   Tout est préfixé .cpgeo- pour n'impacter aucun style existant.
+   ===================================================================== */
+
+/* ---------- Racine de la section ---------- */
+.cpgeo-root {
+  width: 100%;
+  margin: 5px 0 0;
+  text-align: left;
+  font-family: 'Open Sans', Roboto, sans-serif;
+  color: #323232;
+}
+.cpgeo-intro {
+  margin: 0 auto 14px;
+  max-width: 560px;
+  color: #555;
+  font-size: 13.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+.cpgeo-rgpd {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background-color: #f5f7fa;
+  color: #5a6a7a;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+/* ---------- Cartes blocs A / B ---------- */
+.cpgeo-block {
+  position: relative;
+  margin: 0 0 14px;
+  padding: 14px 14px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(8, 39, 67, .07);
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+.cpgeo-block.cpgeo-validated {
+  border-color: #bfe6c8;
+  box-shadow: 0 1px 6px rgba(19, 115, 51, .12);
+}
+.cpgeo-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.cpgeo-block-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #082743;
+  font-family: Poppins, Roboto, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.cpgeo-block-title svg { flex: none; }
+.cpgeo-block-sub {
+  margin: -6px 0 10px;
+  color: #6b7a8c;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+/* ---------- Badges de statut ---------- */
+.cpgeo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+.cpgeo-badge::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex: none;
+}
+.cpgeo-badge-empty        { background: #f1f3f6; color: #7a8698; }
+.cpgeo-badge-searching    { background: #e7f1fb; color: #0072cc; }
+.cpgeo-badge-searching::before { animation: cpgeo-pulse 1s ease-in-out infinite; }
+.cpgeo-badge-found        { background: #e7f1fb; color: #0072cc; }
+.cpgeo-badge-pending      { background: #fff6dd; color: #9a6b00; }
+.cpgeo-badge-validated    { background: #e6f4ea; color: #137333; }
+.cpgeo-badge-error        { background: #fdecea; color: #c62828; }
+.cpgeo-badge-no-image     { background: #fdf3e3; color: #9a6b00; }
+@keyframes cpgeo-pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* ---------- Cartes (Leaflet) ---------- */
+.cpgeo-map {
+  width: 100%;
+  height: 240px;
+  border-radius: 8px;
+  border: 1px solid #dfe6ee;
+  background: #eef2f6;
+  z-index: 0;
+}
+.cpgeo-map-cp .leaflet-control-attribution { font-size: 9px; }
+.cpgeo-map-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  color: #8a97a8;
+  font-size: 12.5px;
+  text-align: center;
+  padding: 10px;
+}
+
+/* ---------- Informations (divs, jamais d'inputs visibles) ---------- */
+.cpgeo-info {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+.cpgeo-info-row {
+  display: flex;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  min-width: 0;
+}
+.cpgeo-info-row.cpgeo-full { grid-column: 1 / -1; }
+.cpgeo-info-label {
+  flex: none;
+  color: #7a8698;
+  font-weight: 600;
+}
+.cpgeo-info-value {
+  color: #22303f;
+  overflow-wrap: anywhere;
+}
+.cpgeo-info-value a { color: #0072cc; }
+.cpgeo-info-mono { font-variant-numeric: tabular-nums; }
+.cpgeo-empty-note {
+  margin: 8px 0 0;
+  color: #8a97a8;
+  font-size: 12.5px;
+  font-style: italic;
+}
+
+/* ---------- Aperçu image bâtiment ---------- */
+.cpgeo-photo-frame {
+  position: relative;
+  margin-top: 4px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #dfe6ee;
+  background: #eef2f6;
+  min-height: 160px;
+}
+.cpgeo-photo-frame img {
+  display: block;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+.cpgeo-photo-caption {
+  padding: 7px 9px;
+  background: #fbfcfe;
+  border-top: 1px solid #e8edf3;
+  color: #5a6a7a;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.cpgeo-photo-caption a { color: #0072cc; }
+.cpgeo-photo-type {
+  position: absolute;
+  top: 8px; left: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(8, 39, 67, .78);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+.cpgeo-aerial-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+.cpgeo-aerial-thumb {
+  width: 84px; height: 84px;
+  flex: none;
+  border-radius: 8px;
+  border: 1px solid #dfe6ee;
+  object-fit: cover;
+  background: #e7ecf1;
+}
+.cpgeo-aerial-meta { font-size: 11.5px; color: #5a6a7a; line-height: 1.5; }
+
+/* ---------- Messages ---------- */
+.cpgeo-message {
+  display: none;
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.cpgeo-message.cpgeo-visible { display: block; animation: cpgeo-fade .25s ease; }
+.cpgeo-message-error   { background: #fdecea; color: #b3261e; border: 1px solid #f5c6c0; }
+.cpgeo-message-warning { background: #fff6dd; color: #8a6100; border: 1px solid #f2e0aa; }
+.cpgeo-message-success { background: #e6f4ea; color: #137333; border: 1px solid #bfe6c8; }
+.cpgeo-message-info    { background: #e7f1fb; color: #0b5ca8; border: 1px solid #c2dcf3; }
+@keyframes cpgeo-fade { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Boutons du module ---------- */
+.cpgeo-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.cpgeo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 128px;
+  padding: 9px 18px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-family: Poppins, Roboto, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color .2s ease, opacity .2s ease, transform .05s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cpgeo-btn:active { transform: translateY(1px); }
+.cpgeo-btn[disabled], .cpgeo-btn.cpgeo-disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.cpgeo-btn-primary   { background-color: #0072cc; color: #fff; }
+.cpgeo-btn-primary:hover:not([disabled]) { background-color: #005fa8; }
+.cpgeo-btn-secondary { background-color: #fff; color: #0072cc; border-color: #0072cc; }
+.cpgeo-btn-secondary:hover:not([disabled]) { background-color: #eef6fd; }
+.cpgeo-btn-ghost     { background-color: transparent; color: #5a6a7a; border-color: #cfd8e3; }
+.cpgeo-btn-ghost:hover:not([disabled]) { background-color: #f4f7fa; }
+.cpgeo-btn-success   { background-color: #137333; color: #fff; }
+.cpgeo-btn-success:hover:not([disabled]) { background-color: #0f5c29; }
+.cpgeo-btn-validate-when-validated { background-color: #e6f4ea; color: #137333; border-color: #bfe6c8; }
+
+/* ---------- Spinner ---------- */
+.cpgeo-spinner {
+  display: inline-block;
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255, 255, 255, .45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: cpgeo-spin .7s linear infinite;
+  flex: none;
+}
+.cpgeo-spinner-dark {
+  border-color: rgba(0, 114, 204, .25);
+  border-top-color: #0072cc;
+}
+@keyframes cpgeo-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Modales ---------- */
+.cpgeo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 14px;
+  overflow-y: auto;
+  background: rgba(8, 20, 35, .55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.cpgeo-modal-overlay.cpgeo-open { display: flex; animation: cpgeo-fade .2s ease; }
+.cpgeo-modal {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: auto 0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(8, 20, 35, .35);
+  animation: cpgeo-modal-in .22s ease;
+  font-family: 'Open Sans', Roboto, sans-serif;
+}
+@keyframes cpgeo-modal-in { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+.cpgeo-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid #edf1f5;
+}
+.cpgeo-modal-title {
+  color: #082743;
+  font-family: Poppins, Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.cpgeo-modal-sub { margin-top: 3px; color: #6b7a8c; font-size: 12.5px; }
+.cpgeo-modal-close {
+  flex: none;
+  width: 32px; height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: #f1f3f6;
+  color: #5a6a7a;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.cpgeo-modal-close:hover { background: #e4e9ef; }
+.cpgeo-modal-body { padding: 14px 18px 18px; }
+.cpgeo-modal-foot {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 12px 18px 16px;
+  border-top: 1px solid #edf1f5;
+  flex-wrap: wrap;
+}
+
+/* ---------- Formulaire des modales ---------- */
+.cpgeo-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+.cpgeo-field { display: block; margin-bottom: 6px; min-width: 0; }
+.cpgeo-field.cpgeo-full { grid-column: 1 / -1; }
+.cpgeo-field-label {
+  display: block;
+  margin-bottom: 4px;
+  color: #44546a;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cpgeo-input, .cpgeo-select {
+  display: block;
+  width: 100%;
+  height: 38px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.42857;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.cpgeo-input:focus, .cpgeo-select:focus { border-color: #3898ec; outline: 0; }
+.cpgeo-input::placeholder { color: #999; }
+.cpgeo-field-hint { margin-top: 3px; color: #8a97a8; font-size: 11px; }
+
+/* ---------- Résultats de recherche ---------- */
+.cpgeo-results { margin-top: 14px; }
+.cpgeo-results-title {
+  margin-bottom: 8px;
+  color: #082743;
+  font-family: Poppins, Roboto, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.cpgeo-result-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  max-height: 218px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+.cpgeo-result-item + .cpgeo-result-item { border-top: 1px solid #eef1f5; }
+.cpgeo-result-btn {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.8px;
+  line-height: 1.45;
+  color: #22303f;
+}
+.cpgeo-result-btn:hover { background: #f2f8fd; }
+.cpgeo-result-item.cpgeo-selected .cpgeo-result-btn { background: #e7f1fb; }
+.cpgeo-result-marker {
+  flex: none;
+  width: 18px; height: 18px;
+  margin-top: 1px;
+  border: 2px solid #b7c3d0;
+  border-radius: 50%;
+  background: #fff;
+  box-sizing: border-box;
+}
+.cpgeo-result-item.cpgeo-selected .cpgeo-result-marker { border-color: #0072cc; background: #0072cc; box-shadow: inset 0 0 0 3px #fff; }
+.cpgeo-result-text { min-width: 0; }
+.cpgeo-result-source { display: block; margin-top: 2px; color: #8a97a8; font-size: 11px; }
+.cpgeo-result-type {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #eef1f5;
+  color: #5a6a7a;
+  font-size: 10px;
+  font-weight: 600;
+}
+.cpgeo-map-modal { height: 260px; margin-top: 4px; }
+.cpgeo-map-hint { margin-top: 6px; color: #6b7a8c; font-size: 11.5px; }
+
+/* ---------- Galerie d'images (bâtiment) ---------- */
+.cpgeo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cpgeo-photo-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .12s ease;
+  display: flex;
+  flex-direction: column;
+}
+.cpgeo-photo-card:hover { border-color: #9cc5e8; box-shadow: 0 4px 14px rgba(0, 114, 204, .14); transform: translateY(-1px); }
+.cpgeo-photo-card.cpgeo-selected { border-color: #0072cc; box-shadow: 0 0 0 3px rgba(0, 114, 204, .18); }
+.cpgeo-photo-card img {
+  display: block;
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  background: #e7ecf1;
+}
+.cpgeo-photo-card-body { padding: 8px 9px 9px; display: flex; flex-direction: column; gap: 4px; }
+.cpgeo-photo-card-title { color: #22303f; font-size: 11.8px; font-weight: 600; line-height: 1.35; }
+.cpgeo-photo-card-meta { color: #6b7a8c; font-size: 10.8px; line-height: 1.45; }
+.cpgeo-photo-card-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.cpgeo-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 9.8px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  text-transform: uppercase;
+}
+.cpgeo-tag-photo    { background: #e7f1fb; color: #0072cc; }
+.cpgeo-tag-sat      { background: #efe9fb; color: #5b3fb8; }
+.cpgeo-tag-street   { background: #e3f4f1; color: #0c7a63; }
+.cpgeo-tag-distance { background: #f1f3f6; color: #5a6a7a; }
+.cpgeo-tag-distance-far { background: #fff0e5; color: #b45309; }
+.cpgeo-photo-card-warning { color: #b45309; font-size: 10.5px; }
+
+.cpgeo-no-image {
+  margin-top: 12px;
+  padding: 13px 14px;
+  border: 1px dashed #e0c78a;
+  border-radius: 10px;
+  background: #fffbf0;
+  color: #7a5b12;
+  font-size: 12.8px;
+  line-height: 1.55;
+}
+.cpgeo-no-image strong { color: #5f470e; }
+
+/* ---------- État chargé / erreurs réseau dans les modales ---------- */
+.cpgeo-loading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 2px;
+  color: #44546a;
+  font-size: 13px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .cpgeo-modal-overlay { padding: 0; }
+  .cpgeo-modal {
+    max-width: none;
+    min-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+  .cpgeo-field-grid { grid-template-columns: 1fr; }
+  .cpgeo-info { grid-template-columns: 1fr; }
+  .cpgeo-map { height: 200px; }
+  .cpgeo-map-modal { height: 220px; }
+  .cpgeo-actions .cpgeo-btn { flex: 1 1 auto; min-width: 0; }
+  .cpgeo-gallery { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .cpgeo-photo-frame img { height: 190px; }
+}
+
+/* ---------- Accessibilité : mouvement réduit ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .cpgeo-badge-searching::before { animation: none; }
+  .cpgeo-modal, .cpgeo-modal-overlay.cpgeo-open, .cpgeo-message.cpgeo-visible { animation: none; }
+  .cpgeo-photo-card:hover { transform: none; }
+}
+
+/* ---------- Impression : masquer les cartes interactives ---------- */
+@media print {
+  .cpgeo-modal-overlay { display: none !important; }
+}
